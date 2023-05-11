@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define ERROR 0
 #define OK 1
@@ -15,7 +16,7 @@ typedef struct Node
     struct Node*  next;
 }Node;
 
-typedef Node* LinkList;     //定义一个LinkList
+typedef Node *LinkList;     //定义一个LinkList
 
 Status InitList(LinkList *L)                // 这是一个二级指针,用来指向头节点
 {
@@ -129,10 +130,91 @@ Status GetElm(LinkList L,int i,ElmType *e)
     return OK;
 }
 
+/*     寻找第一个与e满足的元素       */
+/*         初始条件L已存在          */
+Status LocateElm(LinkList L, ElmType e)
+{
+    int i = 1;
+    LinkList p = L->next;
+
+    while(p)
+    {     
+        if(p->data == e)            //如果节点里有相同的元素
+        return i;                   //返回位置
+        p = p->next;                //没有继续往下搜索
+        i++;                        //位置+1
+    }
+    return ERROR;
+}
+
+/*          删除表中的某个元素                  */
+Status ListDelete(LinkList *L, int i, ElmType* e)
+{
+    int j = 1;
+   LinkList p,q;
+
+    p = *L;
+    while(p->next && j<i)
+    {
+        p = p->next;
+        j++;
+    }
+    if(!p->next || j>i)
+    return ERROR;
+
+    q = p->next;                    /*将后继的值给q*/
+    p->next = q->next;              /*将q后继的值p的后继     p->next = p->next->next*/
+
+    *e = q->data;                   /*返回删除元素*/
+    free(q);                        /*释放空间*/
+    return OK;
+}
+
+/* 头插法随机从产生N个随机数  */
+Status CreateListHead(LinkList *L, int n)
+{
+    LinkList q;
+    //创建表头
+    srand(time(0));
+   *L = (LinkList)malloc(sizeof(Node));
+    (*L)->next = NULL;
+    while(n--)
+    {
+        q = (LinkList)malloc(sizeof(Node));
+        q->data = rand() % 100 + 1;
+        q->next = (*L)->next;
+        (*L)->next = q;
+    }
+
+    return OK;
+
+}
+
+/*      尾插法随机产生N个随机数         */
+Status CreateListTail(LinkList *L,int n)
+{
+    LinkList q,r;
+    //生成随机数
+    srand(time(0));
+    //创建表头
+    *L = (LinkList)malloc(sizeof(Node));
+    r = *L;
+    while(n--)
+    {
+        //创建节点
+        q = (Node *)malloc(sizeof(Node));
+        q->data = rand() % 100 + 1;
+        r->next = q;
+        r = q;
+    }  
+
+    return OK;
+}
+
 int main()
 {
     int i;
-    Status sta;         //查看状态变量
+    Status sta,k;         //查看状态变量
     ElmType e;
     LinkList L;
     //初始化表格
@@ -172,7 +254,42 @@ int main()
     GetElm(L,5,&e);
     printf("在L中的第5个元素为:%d\n",e);
 
+    for(i=9;i<=11;i++)
+    {
+        k = LocateElm(L,i);
+        if(k)
+            printf("第%d个的元素为%d\n",k,i);
+         else
+            printf("没有值为%d的元素\n",i);
+    }
 
+    k = ListLength(L);
+    printf("LinkLenght(L):%d \n",ListLength(L));
+    for(i=k+1; i>=k; i--)
+    {
+        //删除第i行的数据      //e返回删除元素
+        sta = ListDelete(&L,i,&e);
+        if(sta == ERROR)
+            printf("删除%d的元素失败\n",i);
+        else
+            printf("删除第%d的元素为%d\n",i,e);
+    }
+    printf("依次输出L元素:");
+    ListTraverse(L);
 
+    i = 5;
+    ListDelete(&L,5,&e);
+    printf("删除第%d的元素为%d",i,e);
 
+    sta = ClearList(&L);
+    printf("清空后L后:ListLength(L)=%d\n",ListLength(L));
+    CreateListHead(&L,20);
+    printf("整体创建表格头插法L.data\n");
+    ListTraverse(L);
+
+    sta = ClearList(&L);
+    printf("清空后L后:ListLength(L)=%d\n",ListLength(L));
+    CreateListTail(&L,20);
+    printf("整体创建表格尾插法L.data\n");
+    ListTraverse(L);
 }
